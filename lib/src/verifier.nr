@@ -1,12 +1,12 @@
 use crate::helpers;
 use dep::std;
 
-pub fn verify<N>(root : Field, key : Field, value : Field, siblings : [Field; N]) {
+pub fn verify<let N: u32>(root : Field, key : Field, value : Field, siblings : [Field; N]) {
     verifyExtended(1, root, 0, 0, 0, key, value, 0, siblings);
 }
 
 #[field(bn254)]
-fn verifyExtended<N>(enabled : Field, root : Field, oldKey : Field, oldValue : Field, 
+fn verifyExtended<let N: u32>(enabled : Field, root : Field, oldKey : Field, oldValue : Field, 
     isOld0 : Field, key : Field, value : Field, fnc : Field, siblings : [Field; N]) {
     let nLevels = siblings.len() as Field;
     // Steps:
@@ -18,7 +18,8 @@ fn verifyExtended<N>(enabled : Field, root : Field, oldKey : Field, oldValue : F
 	let hash1Old = helpers::endLeafValue(oldKey, oldValue);
 	let hash1New = helpers::endLeafValue(key, value);
 
-    let n2bNew = key.to_le_bits(254); // REVIEW: Fixed bit len
+    // let n2bNew = key.to_le_bits(254); // REVIEW: Fixed bit len
+    let n2bNew: [u1;254] = key.to_le_bits();
 
     let levIns = levelIns(siblings, if enabled == 1 { true } else { false });
 
@@ -27,7 +28,8 @@ fn verifyExtended<N>(enabled : Field, root : Field, oldKey : Field, oldValue : F
     let mut stI0s : [Field; N] = [0; N];
     let mut stInews : [Field; N] = [0; N];
     let mut stNas : [Field; N] = [0; N];
-	for i in 0..nLevels {
+	// for i in 0..nLevels {
+    for i in 0..nLevels as u32 {
         let (stTop, stInew, stIold, stI0, stNa) = if i == 0 {
             smVerifier(isOld0, levIns[0], fnc, enabled, 0, 0, 0, 1 - enabled)
         } else {
@@ -46,7 +48,8 @@ fn verifyExtended<N>(enabled : Field, root : Field, oldKey : Field, oldValue : F
 
     let mut levels : [Field; N] = [0; N];
     let mut i = nLevels-1;
-    for n in 0..nLevels {
+    // for n in 0..nLevels {
+    for n in 0..nLevels as u32 {
         levels[i] = levelVerifier(stTops[i], stInews[i], stIolds[i], siblings[i],
             hash1Old, hash1New, n2bNew[i] as u1, if n != 0 { levels[i+1] } else { 0 });
         i -= 1;
@@ -57,7 +60,7 @@ fn verifyExtended<N>(enabled : Field, root : Field, oldKey : Field, oldValue : F
     assert(root == levels[0]);
 }
 
-fn levelIns<N>(siblings : [Field; N], enabled : bool) -> [Field; N] {
+fn levelIns<let N: u32>(siblings : [Field; N], enabled : bool) -> [Field; N] {
     if enabled {
         assert(siblings[siblings.len()-1] == 0);
     }
